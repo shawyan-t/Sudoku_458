@@ -6,12 +6,38 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.example.sudoku_458.MyGrid
-        android:id="@+id/myGrid"
-        android:layout_width="391dp"
-        android:layout_height="684dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+
+    <Button
+        android:id="@+id/openMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Menu"
+        app:layout_constraintEnd_toStartOf="@+id/resumeGame"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/resumeGame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resume Game"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/openMenu"
+        app:layout_constraintTop_toTopOf="@+id/openMenu" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentBody"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/openMenu"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:name="com.example.sudoku_458.GridFragment"
+        tools:layout="@layout/fragment_grid" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
