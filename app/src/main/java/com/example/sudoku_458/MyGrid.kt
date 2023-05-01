@@ -12,6 +12,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.GestureDetectorCompat
+import com.typicaldev.sudoku.Sudoku
 
 // Currently Selected button
 var selected = 1
@@ -36,9 +37,11 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
             timerHandler.postDelayed(this, 1000)
         }
     }
+    private var gameState = oneSudoku()
     init {
         // Start the timer
         timerHandler.post(timerRunnable)
+        gameState.genNew(35)
     }
 
 
@@ -165,19 +168,20 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         val drawAdjusted = gridSize-1
 
         //println(restart)
-
+        val sgrid = gameState.getGrid()
+        println(sgrid.contentDeepToString())
         if (restart != 1) {
-            for (i in 1..drawAdjusted) {
-                for (j in 1..drawAdjusted) {
+            for (i in 0 until drawAdjusted) {
+                for (j in 0 until drawAdjusted) {
 
 
-                    val text = grid[i][j].toString()        //  ** Put Sudoku Numbers here **
+                    val text = sgrid[i][j].toString()        //  ** Put Sudoku Numbers here **
                     // Center the X axis with the Horizontal boundary
                     // Center the Y axis and with Vertical boundary and divide by 3 to center text
                     canvas.drawText(
                         text,
-                        (i * horizontalBoundary) + (horizontalBoundary / 2),
-                        (j * verticalBoundary) + (verticalBoundary / 2) + (numTextProperties.textSize / 3),
+                        ((i + 1) * horizontalBoundary) + (horizontalBoundary / 2),
+                        ((j + 1) * verticalBoundary) + (verticalBoundary / 2) + (numTextProperties.textSize / 3),
                         numTextProperties
                     )
                 }
@@ -299,35 +303,10 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         val row = (p0.y / grHeight * gridSize).toInt()
 
         if (column == 0){
-            if (row == 1) {
-                selected = 1
-            }
-            else if (row == 2) {
-                selected = 2
-            }
-            else if (row == 3) {
-                selected = 3
-            }
-            else if (row == 4) {
-                selected = 4
-            }
-            else if (row == 5) {
-                selected = 5
-            }
-            else if (row == 6) {
-                selected = 6
-            }
-            else if (row == 7) {
-                selected = 7
-            }
-            else if (row == 8) {
-                selected = 8
-            }
-            else if (row == 9) {
-                selected = 9
-            }
+            selected = row
         }
 
+        // Restart got hit
         else if (((column == 1) and (row == 0)) or ((column == 2) and (row == 0))) {
             restart = 1
             startTime = SystemClock.elapsedRealtime()
@@ -335,7 +314,7 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
                 grid[row].fill(0)
             }
         }
-        else {
+        else { // Normal grid tap
             grid[column][row] = selected
         }
 
@@ -361,5 +340,127 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
 
     override fun onFling(p0: MotionEvent, p1: MotionEvent, p2: Float, p3: Float): Boolean {
         return false
+    }
+}
+
+// Handles everything related to the sudoku game, functions include creating, checking if solved, etc
+class oneSudoku() {
+
+    private var grid = Array(9) { IntArray(9)} // Create a 9x9 grid
+
+    fun getGrid() : Array<IntArray> {
+        return grid
+    }
+
+    fun setVal(col: Int, row: Int, value: Int) {
+        grid[col][row] = value
+    }
+
+    // Creates a new random sudoku board, max is the number of numbers you want to get (you may get more)
+    fun genNew(max: Int) {
+          val NewGame = Sudoku.Builder().build()
+
+//        val arr = genFull()
+//        println(arr.contentDeepToString())
+            grid = NewGame.grid
+    }
+
+    // Creates a new full solved board.
+    private fun genFull() : Array<IntArray> {
+        val newgrid = Array(9) { IntArray(9)}
+        var tuples = genTuples().toMutableList()
+        tuples.shuffle()
+
+        val bottom = 1; val top = 9
+        while (tuples.isNotEmpty()) {
+            val testVal = (bottom..top).random()
+            val tuple = tuples[0]
+            val x = tuple[0]; val y = tuple[1]
+            newgrid[x][y] = testVal
+            val copy = deepCopy(newgrid)
+            val solutions = solCount(0, 0, copy, 0)
+            if (solutions > 0) {
+                tuples.removeAt(0)
+                continue
+            }
+            println("no solutions")
+            newgrid[x][y] = 0
+            tuples.shuffle()
+        }
+        return newgrid
+
+    }
+    private fun deepCopy(arr: Array<IntArray>) : Array<IntArray> {
+        val len = arr.size
+        val newarr = Array(len) { IntArray(len)}
+        for (i in 0 until len) {
+            for (j in 0 until len) {
+                newarr[i][j] = arr[i][j]
+            }
+        }
+        return arr
+    }
+
+    private fun genTuples(): Array<Array<Int>> {
+        val arr = arrayOf<Array<Int>>().toMutableList()
+        for (i in 0 until 9) {
+            for (j in 0 until 9) {
+                val newVal = arrayOf(i, j)
+                arr.add(newVal)
+
+            }
+        }
+        return arr.toTypedArray()
+
+    }
+
+
+    // solCount, returns 0 if no solutions possible, 1 if unique, 2 if not unique
+    private fun solCount(oldi: Int, oldj: Int, cells: Array<IntArray>, oldcount: Int): Int {
+        var i = oldi; var j = oldj; var count = oldcount
+        if (j == 9) {
+            j = 0;
+            if (++i == 9)
+                return 1 + count;
+        }
+
+        if (cells[i][j] != 0) // skip filled cells
+            return solCount(i, j + 1, cells, count);
+        // search for 2 solutions instead of 1
+        // break, if 2 solutions are found
+        for (k in 1 .. 9) {
+            if (count > 1) {
+                break
+            }
+            if (legal(i, j, k, cells)) {
+                cells[i][j] = k
+                // add additional solutions
+                count = solCount(i, j + 1, cells, count);
+            } else {
+                cells[i][j] = 0; // reset on backtrack
+            }
+        }
+        return count
+    }
+
+    // Checks whether a value can fit in a specific spot in the given sudoku grid
+    private fun legal(row: Int, col: Int, value: Int, cells: Array<IntArray>): Boolean {
+        // Check row fitting
+        for (el in cells[row]) {
+            if (el == value) return false
+        }
+        // Check column fitting
+        for (el in cells) {
+            if (el[col] == value) return false
+        }
+        // Check block fitting
+        var blockrow = row - row % 3
+        var blockcol = col - col % 3
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                if (cells[blockrow + i][blockcol + j] == value) return false
+            }
+        }
+        return true
     }
 }
