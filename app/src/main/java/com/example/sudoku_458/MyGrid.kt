@@ -361,11 +361,12 @@ class OneSudoku() {
         return ogLocations
     }
 
+    // Set a value using this, make sure col & row are between 0 & 8
     fun setVal(col: Int, row: Int, value: Int) {
         grid[col][row] = value
     }
 
-    // Creates a new random sudoku board, max is the number of numbers you want to get (you may get more)
+    // Creates a new random sudoku board
     fun genNew() {
         val built = Sudoku.Builder().setLevel(Level.JUNIOR).build()
         grid = built.grid
@@ -390,6 +391,7 @@ class OneSudoku() {
 
     }
 
+    // Loops through every value in the grid, making sure that it is between 1 and 9
     private fun allInRange(grid: Array<IntArray>) : Boolean {
         val validRange = (1..9)
         for (i in grid.indices) {
@@ -402,11 +404,13 @@ class OneSudoku() {
         return true
     }
 
+    // Makes sure that the given column has no duplicate values
     private fun validCol(col: Int, grid: Array<IntArray>) : Boolean {
         val colVal = grid[col]
         return !hasDups(colVal)
     }
 
+    // Makes sure that the given row has no duplicates
     private fun validRow(row: Int, grid: Array<IntArray>) : Boolean {
         val rowVal = IntArray(9)
         for (i in 0 until 9) {
@@ -415,6 +419,7 @@ class OneSudoku() {
         return !hasDups(rowVal)
     }
 
+    // Loops through grid, creating arrays of all the subset squares, and makes sure they don't have duplicates
     private fun validSquares(grid: Array<IntArray>) : Boolean {
         for (col in 0 until 9 step 3) {
             for (row in 0 until 9 step 3) {
@@ -432,6 +437,7 @@ class OneSudoku() {
         return true
     }
 
+    // Very simple array duplicate check
     private fun hasDups(arr: IntArray) : Boolean {
         return arr.size != arr.distinct().count();
     }
