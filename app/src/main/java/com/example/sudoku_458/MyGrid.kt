@@ -12,6 +12,8 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.GestureDetectorCompat
+import com.typicaldev.sudoku.Level
+import com.typicaldev.sudoku.Sudoku
 
 // Currently Selected button
 var selected = 1
@@ -36,9 +38,11 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
             timerHandler.postDelayed(this, 1000)
         }
     }
+    private var gameState = OneSudoku()
     init {
         // Start the timer
         timerHandler.post(timerRunnable)
+        newGame()
     }
 
 
@@ -63,6 +67,8 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     // Use this for inside the grid numbers
     private val numTextProperties = Paint().apply {
         color = Color.BLACK; textSize = (gridSize * 16f); textAlign = Paint.Align.CENTER }
+    private val numGenTextProperties = Paint().apply {
+        color = Color.GRAY; textSize = (gridSize * 16f); textAlign = Paint.Align.CENTER }
 
     // Use this for the buttons outside the grid
     private val gridButtonsSELECTED = Paint().apply {
@@ -92,6 +98,11 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         grHeight = h.toFloat()
         grMidWidth = grWidth / 2
         grMidHeight = grHeight / 2
+    }
+
+    private fun newGame() {
+        gameState.genNew()
+
     }
 
     /* Take Canvas drawing, let parent object do drawing */
@@ -164,22 +175,19 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         // Use adjusted value to get valid range of iterable indexes within grid
         val drawAdjusted = gridSize-1
 
-        //println(restart)
-
+        val sgrid = gameState.getGrid()
+        val genVals = gameState.getOgLocs()
         if (restart != 1) {
-            for (i in 1..drawAdjusted) {
-                for (j in 1..drawAdjusted) {
+            for (i in 0 until drawAdjusted) {
+                for (j in 0 until drawAdjusted) {
 
-
-                    val text = grid[i][j].toString()        //  ** Put Sudoku Numbers here **
+                    val text = sgrid[i][j].toString()        //  ** Put Sudoku Numbers here **
+                    if (text == "0") continue // Don't draw zeros
+                    val props =  if (genVals[i][j])  numGenTextProperties else numTextProperties
                     // Center the X axis with the Horizontal boundary
                     // Center the Y axis and with Vertical boundary and divide by 3 to center text
-                    canvas.drawText(
-                        text,
-                        (i * horizontalBoundary) + (horizontalBoundary / 2),
-                        (j * verticalBoundary) + (verticalBoundary / 2) + (numTextProperties.textSize / 3),
-                        numTextProperties
-                    )
+                    val x = ((i + 1) * horizontalBoundary) + (horizontalBoundary / 2); val y = ((j + 1) * verticalBoundary) + (verticalBoundary / 2) + (numTextProperties.textSize / 3)
+                    canvas.drawText(text,x,y,props)
                 }
             }
         }
@@ -299,51 +307,27 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         val row = (p0.y / grHeight * gridSize).toInt()
 
         if (column == 0){
-            if (row == 1) {
-                selected = 1
-            }
-            else if (row == 2) {
-                selected = 2
-            }
-            else if (row == 3) {
-                selected = 3
-            }
-            else if (row == 4) {
-                selected = 4
-            }
-            else if (row == 5) {
-                selected = 5
-            }
-            else if (row == 6) {
-                selected = 6
-            }
-            else if (row == 7) {
-                selected = 7
-            }
-            else if (row == 8) {
-                selected = 8
-            }
-            else if (row == 9) {
-                selected = 9
-            }
+            selected = row
         }
 
+        // Restart got hit
         else if (((column == 1) and (row == 0)) or ((column == 2) and (row == 0))) {
             restart = 1
             startTime = SystemClock.elapsedRealtime()
+            newGame()
             for (row in grid.indices) {
                 grid[row].fill(0)
             }
         }
-        else {
-            grid[column][row] = selected
+        else { // Normal grid tap
+            val ogs = gameState.getOgLocs()
+            if (!ogs[column - 1][row - 1]) { // Only allow clicking if not a generated value
+                gameState.setVal(column - 1, row - 1, selected)
+                if (gameState.isSolved()) {
+                    solved = 1
+                }
+            }
         }
-
-        /* Use Modulo operation to increment grid values by 1 up to 9
-            resets to 0 upon 10 clicks
-         */
-
-        //grid[column][row] = (grid[column][row] + 1) % 10
 
         /* Redraw grid */
 
@@ -362,4 +346,105 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     override fun onFling(p0: MotionEvent, p1: MotionEvent, p2: Float, p3: Float): Boolean {
         return false
     }
+}
+
+// Handles everything related to the sudoku game, functions include creating, checking if solved, etc
+class OneSudoku() {
+
+    private var grid = Array(9) { IntArray(9)} // Create a 9x9 grid
+    private var ogLocations = Array(9) { BooleanArray(9)} // An array that has the original locations of the generated grid
+    // Used to make sure users don't clear over generated values
+    fun getGrid() : Array<IntArray> {
+        return grid
+    }
+    fun getOgLocs(): Array<BooleanArray> {
+        return ogLocations
+    }
+
+    // Set a value using this, make sure col & row are between 0 & 8
+    fun setVal(col: Int, row: Int, value: Int) {
+        grid[col][row] = value
+    }
+
+    // Creates a new random sudoku board
+    fun genNew() {
+        val built = Sudoku.Builder().setLevel(Level.JUNIOR).build()
+        grid = built.grid
+        ogLocations = Array(9) { BooleanArray(9)}
+        for (i in grid.indices) {
+            for (j in grid[i].indices) {
+                if (grid[i][j] > 0) {
+                    ogLocations[i][j] = true
+                }
+            }
+        }
+    }
+
+    // Checks whether or not the current grid is solved or not
+    fun isSolved() : Boolean {
+        for (i in 0 until 9) {
+            val res1 = validCol(i, grid)
+            val res2 = validRow(i, grid)
+            if (!res1 || !res2) return false
+        }
+        return validSquares(grid) && allInRange(grid)
+
+    }
+
+    // Loops through every value in the grid, making sure that it is between 1 and 9
+    private fun allInRange(grid: Array<IntArray>) : Boolean {
+        val validRange = (1..9)
+        for (i in grid.indices) {
+            for (j in grid[i].indices) {
+                if (!validRange.contains(grid[i][j])) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    // Makes sure that the given column has no duplicate values
+    private fun validCol(col: Int, grid: Array<IntArray>) : Boolean {
+        val colVal = grid[col]
+        return !hasDups(colVal)
+    }
+
+    // Makes sure that the given row has no duplicates
+    private fun validRow(row: Int, grid: Array<IntArray>) : Boolean {
+        val rowVal = IntArray(9)
+        for (i in 0 until 9) {
+            rowVal[i] = (grid[i][row])
+        }
+        return !hasDups(rowVal)
+    }
+
+    // Loops through grid, creating arrays of all the subset squares, and makes sure they don't have duplicates
+    private fun validSquares(grid: Array<IntArray>) : Boolean {
+        for (col in 0 until 9 step 3) {
+            for (row in 0 until 9 step 3) {
+                var arr = IntArray(0).toMutableList()
+                for (i in col until col+3) {
+                    for (j in row until row + 3) {
+                        arr.add(grid[i][j])
+                    }
+                }
+                if (hasDups(arr.toTypedArray().toIntArray())) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    // Very simple array duplicate check
+    private fun hasDups(arr: IntArray) : Boolean {
+        return arr.size != arr.distinct().count();
+    }
+
+
+
+
+
+
 }
