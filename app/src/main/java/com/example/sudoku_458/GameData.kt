@@ -4,7 +4,8 @@ import com.google.gson.Gson
 
 data class GameData(
     var grid: Array<IntArray>,
-    var orig: Array<BooleanArray>
+    var orig: Array<BooleanArray>,
+    var time: Long
 ) {
     // Auto generated equals() that uses deep equality
     override fun equals(other: Any?): Boolean {
