@@ -39,7 +39,7 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     private var gameState = OneSudoku()
     init {
         // Start the timer
-        timerHandler.post(timerRunnable)
+        //timerHandler.post(timerRunnable)
         newGame()
     }
 
@@ -75,6 +75,9 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     private val playerTextDisplays = Paint().apply {
         color = Color.BLACK; textSize = 50f; textAlign = Paint.Align.CENTER }
 
+    private val playerTextWin = Paint().apply {
+        color = Color.GREEN; textSize = 50f; textAlign = Paint.Align.CENTER }
+
     private var mDetector = GestureDetectorCompat(this.context,this)
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -99,8 +102,10 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     }
 
     fun newGame() {
+        timerHandler.post(timerRunnable)
         gameState.genNew()
         startTime = SystemClock.elapsedRealtime()
+        solved = 0
     }
 
     fun getGame(): GameData {
@@ -119,7 +124,6 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
            Local Variables for onDraw calculate the standard size / boundaries
            given a standard Num X Num size grid (Num in this case being 9)
         */
-
         val elapsedTime = (SystemClock.elapsedRealtime() - startTime) / 1000
         val timer = "${elapsedTime}s"
 
@@ -131,7 +135,7 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         for (i in 1..gridSize) {
             colorVar = if (((i - 1) % 3) == 0) thickLines else colorOfLines
             canvas.drawLine(i * horizontalBoundary,
-                220f,
+                192f,
                 i * horizontalBoundary,
                 height.toFloat(),
                 colorVar
@@ -207,11 +211,12 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
 
         // This text only needs to be changed if Sudoku is solved. Game Logic checker will change text here if flag is met
         val playerSolvedtext = if (solved == 0) "Unsolved" else "Solved"
+        colorVar = if (solved == 0) playerTextDisplays else playerTextWin
         canvas.drawText(
             playerSolvedtext,
             ((5).toFloat() * horizontalBoundary) + (horizontalBoundary / 2),
             100f,
-            playerTextDisplays
+            colorVar
         )
 
         // Timer text
@@ -230,11 +235,12 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
             and grid size respectively
          */
 
+        if (solved == 1) return true  // instakill , no input allowed if solved
         // Tapped Coordinates
         val column = (p0.x / grWidth * gridSize).toInt()
         val row = (p0.y / grHeight * gridSize).toInt()
-        println(row)
-        println(column)
+        //println(row)
+        //println(column)
         if (column == 0){
             selected = row
         }
@@ -246,7 +252,9 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
             if (!ogs[column - 1][row - 1]) { // Only allow clicking if not a generated value
                 gameState.setVal(column - 1, row - 1, selected)
                 if (gameState.isSolved()) {
-                    solved = 1
+                    timerHandler.removeCallbacks(timerRunnable) // Set Pause timer
+                    solved = 1                                  // Set win flag
+
                 }
             }
         }
