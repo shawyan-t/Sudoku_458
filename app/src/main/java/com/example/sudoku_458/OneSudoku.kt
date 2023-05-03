@@ -19,6 +19,13 @@ class OneSudoku() {
         return ogLocations
     }
 
+    fun setGrid(g: Array<IntArray>) {
+        grid = g
+    }
+    fun setOgLocs(o: Array<BooleanArray>) {
+        ogLocations = o
+    }
+
     // Set a value using this, make sure col & row are between 0 & 8
     fun setVal(col: Int, row: Int, value: Int) {
         grid[col][row] = value
