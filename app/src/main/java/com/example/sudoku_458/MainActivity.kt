@@ -2,9 +2,13 @@ package com.example.sudoku_458
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import java.io.IOException
+
+const val SAVE_FILE = "saved_games.txt"
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,12 +42,29 @@ class MainActivity : AppCompatActivity() {
 
     // Saving can currently only save one game at a time.
     fun saveGame(): Boolean {
-
+        try {
+            openFileOutput(SAVE_FILE, MODE_PRIVATE).use {ostream ->
+                var gstr = gameToJson(myGrid.getGame())
+                ostream.writer().write(gstr)
+                Log.v("Writing File", gstr)
+            }
+        } catch (err: IOException) {
+            err.printStackTrace()
+            return false
+        }
         return true
     }
 
     fun loadRecentGame(): Boolean {
-
+        try {
+            var lines = openFileInput(SAVE_FILE).reader().readLines()
+            Log.v("Reading File", lines.toString())
+            if (lines.isEmpty()) return false
+            myGrid.setGame(gameFromJson(lines.first()))
+        } catch (err: IOException) {
+            err.printStackTrace()
+            return false
+        }
         return true
     }
 }

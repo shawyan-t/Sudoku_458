@@ -102,6 +102,15 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         gameState.genNew()
     }
 
+    fun getGame(): GameData {
+        return GameData(gameState.getGrid(), gameState.getOgLocs())
+    }
+
+    fun setGame(game: GameData) {
+        gameState.setGrid(game.grid)
+        gameState.setOgLocs(game.orig)
+    }
+
     /* Take Canvas drawing, let parent object do drawing */
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
