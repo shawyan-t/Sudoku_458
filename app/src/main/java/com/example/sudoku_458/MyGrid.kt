@@ -16,9 +16,6 @@ import androidx.core.view.GestureDetectorCompat
 // Currently Selected button
 var selected = 1
 
-// Initial game state for drawing
-var restart = 1
-
 // Game state indicator at top
 var solved = 0
 class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), GestureDetector.OnGestureListener {
@@ -35,6 +32,7 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
             invalidate()
             timerHandler.postDelayed(this, 1000)
         }
+
     }
     private var gameState = OneSudoku()
     init {
@@ -44,22 +42,9 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     }
 
 
-    /*
-       Paint and Grid Size values can be adjusted easily below
-       in case we want a red, blue, green, yellow, etc. themed grid
-       .
-       .
-       .
-       Or if we want to adjust the size ( Currently 9x9 )
-     */
-
     private val colorOfLines = Paint().apply { color = Color.BLACK; strokeWidth = 1f }
     private val thickLines = Paint().apply { color = Color.BLACK; strokeWidth = 10f }
     private val gridSize = 10
-
-    // Use newly established grid array to keep track of text we click on and want to modify
-    // use this for the sudoku board
-    private var grid = Array(gridSize) { IntArray(gridSize) }
 
 
     // Use this for inside the grid numbers
@@ -121,8 +106,8 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         /*
-           Local Variables for onDraw calculate the standard size / boundaries
-           given a standard Num X Num size grid (Num in this case being 9)
+            Local variables for ondraw Calculate the size
+            9x9 Grid for Sudoku in this program
         */
         val elapsedTime = (SystemClock.elapsedRealtime() - startTime) / 1000
         val timer = "${elapsedTime}s"
@@ -153,20 +138,6 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
                 colorVar
             )
         }
-
-        /* Display Number within Grid Lines */
-        /* Redrawn Grid from previous numberGrid project.
-
-            This time:
-            val Text is utilized to keep track of the current position with the
-            grid array we want to modify.
-
-            `verticalAxis` and `displayNumStandard` from previous project written out
-             and merged into single line declarations for the x and y boundaries, respectively
-
-             X and Y boundaries no longer utilize horizontalAdjust and VerticalAdjust, as it has
-             been phased out by the removal of displayNumStandard
-         */
 
         // Use adjusted value to get valid range of iterable indexes within grid
         val drawAdjusted = gridSize-1
@@ -247,13 +218,13 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         else if ((row == 0) and ((column == 1) or (column == 2))) { // Clear all was hit
             gameState.clearInputted()
         }
-        else if ((row > 0) and (column > 0)) { // Normal grid tap
+        else if ((row > 0) and (column > 0)) {                      // Normal grid tap
             val ogs = gameState.getOgLocs()
-            if (!ogs[column - 1][row - 1]) { // Only allow clicking if not a generated value
+            if (!ogs[column - 1][row - 1]) {                        // Only allow clicking if not a generated value
                 gameState.setVal(column - 1, row - 1, selected)
                 if (gameState.isSolved()) {
-                    timerHandler.removeCallbacks(timerRunnable) // Set Pause timer
-                    solved = 1                                  // Set win flag
+                    timerHandler.removeCallbacks(timerRunnable)     // Set Pause timer
+                    solved = 1                                      // Set win flag
 
                 }
             }
