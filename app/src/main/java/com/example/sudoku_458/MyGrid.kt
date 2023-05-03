@@ -35,6 +35,7 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
 
     }
     private var gameState = OneSudoku()
+    private var seconds: Long = 0
     init {
         // Start the timer
         //timerHandler.post(timerRunnable)
@@ -89,17 +90,32 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     fun newGame() {
         timerHandler.post(timerRunnable)
         gameState.genNew()
+        seconds = 0
         startTime = SystemClock.elapsedRealtime()
         solved = 0
     }
 
     fun getGame(): GameData {
-        return GameData(gameState.getGrid(), gameState.getOgLocs())
+        return GameData(gameState.getGrid(), gameState.getOgLocs(), getTime())
     }
 
+    // Restore the state from the GameData, and reset like beginning a new game.
     fun setGame(game: GameData) {
+        timerHandler.post(timerRunnable)
         gameState.setGrid(game.grid)
         gameState.setOgLocs(game.orig)
+        seconds = game.time
+        startTime = SystemClock.elapsedRealtime()
+        solved = 0
+    }
+
+    private fun stopTimer() {
+        seconds = getTime()
+        timerHandler.removeCallbacks(timerRunnable)
+
+    }
+    private fun getTime(): Long {
+        return ((SystemClock.elapsedRealtime() - startTime) / 1000L) + seconds
     }
 
     /* Take Canvas drawing, let parent object do drawing */
@@ -109,8 +125,7 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
             Local variables for ondraw Calculate the size
             9x9 Grid for Sudoku in this program
         */
-        val elapsedTime = (SystemClock.elapsedRealtime() - startTime) / 1000
-        val timer = "${elapsedTime}s"
+        val timer = "${getTime()}s"
 
         val horizontalBoundary = width.toFloat() / gridSize
         val verticalBoundary = height.toFloat() / gridSize
@@ -223,9 +238,8 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
             if (!ogs[column - 1][row - 1]) {                        // Only allow clicking if not a generated value
                 gameState.setVal(column - 1, row - 1, selected)
                 if (gameState.isSolved()) {
-                    timerHandler.removeCallbacks(timerRunnable)     // Set Pause timer
+                    stopTimer()
                     solved = 1                                      // Set win flag
-
                 }
             }
         }
@@ -249,7 +263,7 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     }
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        timerHandler.removeCallbacks(timerRunnable)
+        stopTimer()
     }
 
     override fun onDown(p0: MotionEvent): Boolean {
