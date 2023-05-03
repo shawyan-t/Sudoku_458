@@ -24,9 +24,26 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menuNewGame -> myGrid.newGame()
+            R.id.menuSaveGame -> Toast.makeText(this,
+                if (saveGame()) "Game Saved."
+                else "Couldn't save game!", Toast.LENGTH_SHORT).show()
+            R.id.menuLoadRecentGame -> Toast.makeText(this,
+                if (loadRecentGame()) "Recent Game Loaded."
+                else "Couldn't load game!", Toast.LENGTH_SHORT).show()
             R.id.menuCloseApp -> finish()
             else -> Toast.makeText(this, "Not Implemented!", Toast.LENGTH_SHORT).show()
         }
+        return true
+    }
+
+    // Saving can currently only save one game at a time.
+    fun saveGame(): Boolean {
+
+        return true
+    }
+
+    fun loadRecentGame(): Boolean {
+
         return true
     }
 }
