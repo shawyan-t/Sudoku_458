@@ -46,8 +46,6 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     private val thickLines = Paint().apply { color = Color.BLACK; strokeWidth = 10f }
     private val gridSize = 10
 
-    // Use newly established grid array to keep track of text we click on and want to modify
-    // use this for the sudoku board
 
     // Use this for inside the grid numbers
     private val numTextProperties = Paint().apply {
@@ -108,8 +106,8 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         /*
-           Local Variables for onDraw calculate the standard size / boundaries
-           given a standard Num X Num size grid (Num in this case being 9)
+            Local variables for ondraw Calculate the size
+            9x9 Grid for Sudoku in this program
         */
         val elapsedTime = (SystemClock.elapsedRealtime() - startTime) / 1000
         val timer = "${elapsedTime}s"
@@ -140,20 +138,6 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
                 colorVar
             )
         }
-
-        /* Display Number within Grid Lines */
-        /* Redrawn Grid from previous numberGrid project.
-
-            This time:
-            val Text is utilized to keep track of the current position with the
-            grid array we want to modify.
-
-            `verticalAxis` and `displayNumStandard` from previous project written out
-             and merged into single line declarations for the x and y boundaries, respectively
-
-             X and Y boundaries no longer utilize horizontalAdjust and VerticalAdjust, as it has
-             been phased out by the removal of displayNumStandard
-         */
 
         // Use adjusted value to get valid range of iterable indexes within grid
         val drawAdjusted = gridSize-1
