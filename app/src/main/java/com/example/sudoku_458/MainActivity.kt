@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
                 if (saveGame()) "Game Saved."
                 else "Couldn't save game!", Toast.LENGTH_SHORT).show()
             R.id.menuLoadRecentGame -> Toast.makeText(this,
-                if (loadRecentGame()) "Recent Game Loaded."
+                if (loadRecentGame()) "Most Recent Saved Game Loaded."
                 else "Couldn't load game!", Toast.LENGTH_SHORT).show()
             R.id.menuCloseApp -> finish()
             else -> Toast.makeText(this, "Not Implemented!", Toast.LENGTH_SHORT).show()
@@ -45,8 +45,8 @@ class MainActivity : AppCompatActivity() {
         try {
             openFileOutput(SAVE_FILE, MODE_PRIVATE).use {ostream ->
                 var gstr = gameToJson(myGrid.getGame())
-                ostream.writer().write(gstr)
-                Log.v("Writing File", gstr)
+                ostream.write(gstr.toByteArray())
+                //Log.v("Writing File", gstr)
             }
         } catch (err: IOException) {
             err.printStackTrace()
@@ -57,12 +57,14 @@ class MainActivity : AppCompatActivity() {
 
     fun loadRecentGame(): Boolean {
         try {
-            var lines = openFileInput(SAVE_FILE).reader().readLines()
-            Log.v("Reading File", lines.toString())
-            if (lines.isEmpty()) return false
-            myGrid.setGame(gameFromJson(lines.first()))
+            openFileInput(SAVE_FILE).bufferedReader().useLines() { lines ->
+                myGrid.setGame(gameFromJson(lines.first()))
+            }
         } catch (err: IOException) {
             err.printStackTrace()
+            return false
+        } catch (empty: NoSuchElementException) {
+            // Thrown by Sequence<T>.first() when seq is empty, in the useLines block.
             return false
         }
         return true
