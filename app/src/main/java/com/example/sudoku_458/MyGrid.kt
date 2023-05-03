@@ -100,6 +100,7 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
 
     fun newGame() {
         gameState.genNew()
+        startTime = SystemClock.elapsedRealtime()
     }
 
     fun getGame(): GameData {
@@ -125,35 +126,21 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         val horizontalBoundary = width.toFloat() / gridSize
         val verticalBoundary = height.toFloat() / gridSize
 
-        var lineit = 3
-        var colorVar = colorOfLines
+        var colorVar: Paint
         /* ِDisplay Vertical Grid Lines */
         for (i in 1..gridSize) {
-            if ((lineit % 3) == 0) {
-                colorVar = thickLines
-            }
-            else {
-                colorVar = colorOfLines
-            }
+            colorVar = if (((i - 1) % 3) == 0) thickLines else colorOfLines
             canvas.drawLine(i * horizontalBoundary,
-                192f,
+                220f,
                 i * horizontalBoundary,
                 height.toFloat(),
                 colorVar
             )
-            lineit = lineit+1
         }
 
-        var lineitHori = 3
-        colorVar = colorOfLines
         /* ِDisplay Horizontal Grid Lines */
         for (i in 1..gridSize) {
-            if ((lineitHori % 3) == 0) {
-                colorVar = thickLines
-            }
-            else {
-                colorVar = colorOfLines
-            }
+            colorVar = if (((i - 1) % 3) == 0) thickLines else colorOfLines
             canvas.drawLine(
                 110f,
                 i * verticalBoundary,
@@ -161,7 +148,6 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
                 i * verticalBoundary,
                 colorVar
             )
-            lineitHori = lineitHori+1
         }
 
         /* Display Number within Grid Lines */
@@ -183,113 +169,105 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
 
         val sgrid = gameState.getGrid()
         val genVals = gameState.getOgLocs()
-        if (restart != 1) {
-            for (i in 0 until drawAdjusted) {
-                for (j in 0 until drawAdjusted) {
+        for (i in 0 until drawAdjusted) {
+            for (j in 0 until drawAdjusted) {
 
-                    val text = sgrid[i][j].toString()        //  ** Put Sudoku Numbers here **
-                    if (text == "0") continue // Don't draw zeros
-                    val props =  if (genVals[i][j])  numGenTextProperties else numTextProperties
-                    // Center the X axis with the Horizontal boundary
-                    // Center the Y axis and with Vertical boundary and divide by 3 to center text
-                    val x = ((i + 1) * horizontalBoundary) + (horizontalBoundary / 2); val y = ((j + 1) * verticalBoundary) + (verticalBoundary / 2) + (numTextProperties.textSize / 3)
-                    canvas.drawText(text,x,y,props)
-                }
+                val text = sgrid[i][j].toString()        //  ** Put Sudoku Numbers here **
+                if (text == "0") continue // Don't draw zeros
+                val props =  if (genVals[i][j])  numGenTextProperties else numTextProperties
+                // Center the X axis with the Horizontal boundary
+                // Center the Y axis and with Vertical boundary and divide by 3 to center text
+                val x = ((i + 1) * horizontalBoundary) + (horizontalBoundary / 2); val y = ((j + 1) * verticalBoundary) + (verticalBoundary / 2) + (numTextProperties.textSize / 3)
+                canvas.drawText(text,x,y,props)
             }
         }
 
+        for (i in 0..drawAdjusted){
+            var text = i.toString()
+            if (i == 0) text = "X"
+            colorVar = if (i == selected) gridButtonsSELECTED else numTextProperties
 
-        // After restarting or the initialization, the draw will always go here unless restart is pressed
-        else {
-            for (i in 1..drawAdjusted) {
-                for (j in 1..drawAdjusted) {
-                    val text = "\u200E " // Invisible character
+            canvas.drawText(
+                text,
+                50f,
+                ((i + 0.77) * verticalBoundary).toFloat(),
+                colorVar
+            )
 
-                    // Center the X axis with the Horizontal boundary
-                    // Center the Y axis and with Vertical boundary and divide by 3 to center text
-
-                    canvas.drawText(
-                        text,
-                        (i * horizontalBoundary) + (horizontalBoundary / 2),
-                        (j * verticalBoundary) + (verticalBoundary / 2) + (numTextProperties.textSize / 3),
-                        numTextProperties
-                    )
-                }
-            }
         }
 
-        for (i in 1..drawAdjusted){
-            val text = i.toString()
-
-            if (i == selected) {
-
-                canvas.drawText(
-                    text,
-                    50f,
-                    ((i + 0.77) * verticalBoundary).toFloat(),
-                    gridButtonsSELECTED
-                )
-            }
-
-            else {
-                canvas.drawText(
-                    text,
-                    50f,
-                    ((i + 0.77) * verticalBoundary).toFloat(),
-                    numTextProperties
-                )
-            }
-        }
-
-        // Restart button randomizes a new sudoku board and resets all flags and tips and stuff
-        val text = "Restart"
+        // Clear all button, clears all the inputted values on the current board. Leaves generated values
         canvas.drawText(
-            text,
-            ((1.5).toFloat() * horizontalBoundary) + (horizontalBoundary / 2),
+            "Clear All",
+            ((1.56).toFloat() * horizontalBoundary) + (horizontalBoundary / 2),
             100f,
             playerTextDisplays
         )
 
 
         // This text only needs to be changed if Sudoku is solved. Game Logic checker will change text here if flag is met
-
-        if (solved == 0) {
-            val playerSolvedtext = "Unsolved"
-            canvas.drawText(
-                playerSolvedtext,
-                ((5).toFloat() * horizontalBoundary) + (horizontalBoundary / 2),
-                100f,
-                playerTextDisplays
-            )
-        }
-        else {
-            val playerSolvedtext = "Solved!"
-            canvas.drawText(
-                playerSolvedtext,
-                ((5).toFloat() * horizontalBoundary) + (horizontalBoundary / 2),
-                100f,
-                playerTextDisplays
-            )
-        }
-
-        // I was too lazy to add this tonight but basically a timer needs to go here
-        val timerText = timer
+        val playerSolvedtext = if (solved == 0) "Unsolved" else "Solved"
         canvas.drawText(
-            timerText,
+            playerSolvedtext,
+            ((5).toFloat() * horizontalBoundary) + (horizontalBoundary / 2),
+            100f,
+            playerTextDisplays
+        )
+
+        // Timer text
+        canvas.drawText(
+            timer,
             ((8.23).toFloat() * horizontalBoundary) + (horizontalBoundary / 2),
             100f,
             playerTextDisplays
         )
 
+    }
 
+    // Handle click event.
+    override fun onSingleTapUp(p0: MotionEvent): Boolean {
+        /* Calculate the event coordinates divided by the width or height
+            and grid size respectively
+         */
 
-        // Start drawing grid after initialization or restart, set flag
-        if (restart == 1){
-            restart = 0
+        // Tapped Coordinates
+        val column = (p0.x / grWidth * gridSize).toInt()
+        val row = (p0.y / grHeight * gridSize).toInt()
+        println(row)
+        println(column)
+        if (column == 0){
+            selected = row
         }
+        else if ((row == 0) and ((column == 1) or (column == 2))) { // Clear all was hit
+            gameState.clearInputted()
+        }
+        else if ((row > 0) and (column > 0)) { // Normal grid tap
+            val ogs = gameState.getOgLocs()
+            if (!ogs[column - 1][row - 1]) { // Only allow clicking if not a generated value
+                gameState.setVal(column - 1, row - 1, selected)
+                if (gameState.isSolved()) {
+                    solved = 1
+                }
+            }
+        }
+
+        /* Redraw grid */
+        invalidate()
+        return true
+    }
+
+    // Random required overrides for motion events, leave as is
+    override fun onScroll(p0: MotionEvent, p1: MotionEvent, p2: Float, p3: Float): Boolean {
+        return false
+    }
+
+    override fun onLongPress(p0: MotionEvent) {
 
     }
 
+    override fun onFling(p0: MotionEvent, p1: MotionEvent, p2: Float, p3: Float): Boolean {
+        return false
+    }
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         timerHandler.removeCallbacks(timerRunnable)
@@ -301,56 +279,6 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
 
     override fun onShowPress(p0: MotionEvent) {
 
-    }
-
-    override fun onSingleTapUp(p0: MotionEvent): Boolean {
-        /* Calculate the event coordinates divided by the width or height
-            and grid size respectively
-         */
-
-        // Tapped Coordinates
-        val column = (p0.x / grWidth * gridSize).toInt()
-        val row = (p0.y / grHeight * gridSize).toInt()
-
-        if (column == 0){
-            selected = row
-        }
-
-        // Restart got hit
-        else if (((column == 1) and (row == 0)) or ((column == 2) and (row == 0))) {
-            restart = 1
-            startTime = SystemClock.elapsedRealtime()
-            newGame()
-            for (row in grid.indices) {
-                grid[row].fill(0)
-            }
-        }
-        else { // Normal grid tap
-            val ogs = gameState.getOgLocs()
-            if (!ogs[column - 1][row - 1]) { // Only allow clicking if not a generated value
-                gameState.setVal(column - 1, row - 1, selected)
-                if (gameState.isSolved()) {
-                    solved = 1
-                }
-            }
-        }
-
-        /* Redraw grid */
-
-        invalidate()
-        return true
-    }
-
-    override fun onScroll(p0: MotionEvent, p1: MotionEvent, p2: Float, p3: Float): Boolean {
-        return false
-    }
-
-    override fun onLongPress(p0: MotionEvent) {
-
-    }
-
-    override fun onFling(p0: MotionEvent, p1: MotionEvent, p2: Float, p3: Float): Boolean {
-        return false
     }
 }
 
