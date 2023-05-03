@@ -7,9 +7,13 @@ import android.view.MenuItem
 import android.widget.Toast
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var myGrid: MyGrid
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        myGrid = findViewById(R.id.myGrid)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -19,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menuNewGame -> Toast.makeText(this, "New Game...", Toast.LENGTH_SHORT).show()
+            R.id.menuNewGame -> myGrid.newGame()
             R.id.menuCloseApp -> finish()
             else -> Toast.makeText(this, "Not Implemented!", Toast.LENGTH_SHORT).show()
         }

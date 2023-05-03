@@ -12,8 +12,6 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.GestureDetectorCompat
-import com.typicaldev.sudoku.Level
-import com.typicaldev.sudoku.Sudoku
 
 // Currently Selected button
 var selected = 1
@@ -100,9 +98,8 @@ class MyGrid(context: Context?, attrs: AttributeSet?) : View(context, attrs), Ge
         grMidHeight = grHeight / 2
     }
 
-    private fun newGame() {
+    fun newGame() {
         gameState.genNew()
-
     }
 
     /* Take Canvas drawing, let parent object do drawing */
